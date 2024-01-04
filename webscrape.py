@@ -14,4 +14,4 @@ for content in image_content:
 
     title = img_tag['alt']
 
-    print(f'Title: {title}')
+    print(f'Book Titles: {title}')
