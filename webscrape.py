@@ -26,8 +26,10 @@ def download_book_image(book_data, base_path='images/'):
         None
         """
     try:
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
         # Extract the image URL and book title from the provided book_data dictionary
-        image_url = book_data.get('Image URL')
+        image_url = book_data.get('Image url')
         book_title = book_data.get('Book title')
 
         # Check if either image URL or book title is not found
@@ -113,6 +115,7 @@ def products_links(page):
     # Return the list of image URLs
     return links
 
+
 # Set the timeout to 15 minutes
 timeout_seconds = TIMEOUT_SECONDS
 # Record the current time when the scraping process starts
@@ -164,7 +167,7 @@ for test_link in all_links:
                 break  # Break out of the retry loop if max retries reached
             continue  # Retry the current link
 
-# Condition to test link
+    # Condition to test link
     if page_response.status_code != 200:
         print(f"Error accessing {test_link}. Status code: {page_response.status_code}")
         continue
@@ -201,7 +204,7 @@ for test_link in all_links:
             rating_text.remove('star-rating')
 
             # Store the review rating in the data dictionary
-            data_dict['Review Rating'] = rating_text[0]
+            data_dict['Review rating'] = rating_text[0]
 
     # Find all the tables with the specified class in the HTML
     table_content = soup.find_all('table', class_='table table-striped')
@@ -221,6 +224,12 @@ for test_link in all_links:
         # Removes 'tax' and 'product type' from the data dictionary
         data_dict.pop('Tax', None)
         data_dict.pop('Product Type', None)
+        data_dict.pop('Number of reviews', None)
+        # Changes the names of the previous keys to new ones
+        data_dict['Price excluding tax'] = data_dict.pop('Price (excl. tax)')
+        data_dict['Universal product code(upc)'] = data_dict.pop('UPC')
+        data_dict['Price including tax'] = data_dict.pop('Price (incl. tax)')
+        data_dict['Quantity available'] = data_dict.pop('Availability')
 
     # Finds all product description sections
     product_description = soup.find_all('div', id='product_description')
@@ -231,7 +240,7 @@ for test_link in all_links:
         p_text = p_content.get_text()
 
         # Stores product description in data dictionary
-        data_dict['Product Description'] = p_text
+        data_dict['Product description'] = p_text
 
     # Finds the image content section
     image_content = soup.find('div', class_='item active')
@@ -246,27 +255,38 @@ for test_link in all_links:
             url_image = f'{base_url_image}{clean_image}'
 
             # Stores image URL in data dictionary
-            data_dict['Image URL'] = url_image
+            data_dict['Image url'] = url_image
 
     # Store the product page URL in the data dictionary
-    data_dict['Product_page_url'] = test_link
+    data_dict['Product page url'] = test_link
 
     # Append the dictionary to the list
     all_data_dicts.append(data_dict)
 
-# Set to store unique book titles
+# Store unique book titles
 unique_book_titles = set()
 
 # Loop through all book data to count books and images
 for book_data in all_data_dicts:
-    product_page_url = book_data.get('Product_page_url')
+    product_page_url = book_data.get('Product page url')
     book_title = book_data.get('Book title')
     download_book_image(book_data)
 
-# Read the list of dictionaries into a DataFrame
-df = pd.DataFrame(all_data_dicts)
+# list of dictionaries into a DataFrame with column order
+df = pd.DataFrame(all_data_dicts, columns=[
+    'Book title',
+    'Category',
+    'Universal product code(upc)',
+    'Quantity available',
+    'Review rating',
+    'Price excluding tax',
+    'Price including tax',
+    'Product description',
+    'Product page url',
+    'Image url'
+])
 
-# Replace 'Category' with the actual column name you want to sort by
+# Sort columns by 'Category'
 sorted_df = df.sort_values(by='Category')
 
 # Get unique values in the sorted column
