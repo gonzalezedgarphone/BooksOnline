@@ -263,10 +263,6 @@ for test_link in all_links:
     # Append the dictionary to the list
     all_data_dicts.append(data_dict)
 
-# Store unique book titles
-
-unique_book_titles = set()
-
 # Loop through all book data to count books and images
 for book_data in all_data_dicts:
     product_page_url = book_data.get('Product page url')
